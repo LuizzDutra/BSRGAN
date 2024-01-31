@@ -32,7 +32,7 @@ This work was previously submitted to CVPR2021.
 """
 
 
-def main():
+def main(image_list):
 
     utils_logger.logger_info('blind_sr_log', log_path='blind_sr_log.log')
     logger = logging.getLogger('blind_sr_log')
@@ -49,7 +49,7 @@ def main():
 
 
 
-    save_results = True
+    save_results = False
     sf = 4
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -92,16 +92,19 @@ def main():
             logger.info('{:>16s} : {:s}'.format('Output Path', E_path))
             idx = 0
 
-            for img in util.get_image_paths(L_path):
+            result_list = []
+
+            for img in image_list:
 
                 # --------------------------------
                 # (1) img_L
                 # --------------------------------
                 idx += 1
-                img_name, ext = os.path.splitext(os.path.basename(img))
+                #img_name, ext = os.path.splitext(os.path.basename(img))
+                img_name, ext = os.path.splitext(img[0])
                 logger.info('{:->4d} --> {:<s} --> x{:<d}--> {:<s}'.format(idx, model_name, sf, img_name+ext))
 
-                img_L = util.imread_uint(img, n_channels=3)
+                img_L = util.imread_uint_alternate(img[1], n_channels=3)
                 img_L = util.uint2tensor4(img_L)
                 img_L = img_L.to(device)
 
@@ -114,8 +117,10 @@ def main():
                 # (3) img_E
                 # --------------------------------
                 img_E = util.tensor2uint(img_E)
+                result_list.append((img_name+'_'+model_name+'.png', img_E))
                 if save_results:
                     util.imsave(img_E, os.path.join(E_path, img_name+'_'+model_name+'.png'))
+        return result_list
 
 
 if __name__ == '__main__':
